@@ -1,0 +1,328 @@
+<html>
+<head>
+<title>Fogulum</title>
+</head>
+<body>
+<script>
+
+st = "font-family:\"Consolas\",monospace;color:white;background-color:black;border:none;outline:white solid 1px"
+document.body.setAttribute("style","background-color:black")
+
+e = document.createElement("div")
+e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;font-size:30px")
+e.textContent = "Fogulum 1.0"
+document.body.appendChild(e)
+
+e = document.createElement("label")
+e.textContent = "upload images"
+e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;outline:white solid 1px;padding-left:5px;padding-right:5px")
+e.setAttribute("id","s_upload")
+document.body.appendChild(e)
+e = document.createElement("input")
+e.setAttribute("style","display:none")
+e.setAttribute("type","file")
+e.setAttribute("id","upload")
+e.oninput = processImages
+document.getElementById("s_upload").appendChild(e)
+
+document.body.appendChild(document.createElement("br"))
+
+e = document.createElement("div")
+e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;white-space:pre-line;word-break:break-word")
+e.textContent = ""
+e.setAttribute("id","images")
+document.body.appendChild(e)
+
+document.body.appendChild(document.createElement("br"))
+document.body.appendChild(document.createElement("br"))
+
+e = document.createElement("button"); e.setAttribute("style",st)
+e.textContent = "+add"; e.onclick = () => manageEff(1)
+document.body.appendChild(e)
+e = document.createElement("button"); e.setAttribute("style",st)
+e.textContent = "-sub"; e.onclick = () => manageEff(2)
+document.body.appendChild(e)
+e = document.createElement("button"); e.setAttribute("style",st)
+e.textContent = "*dup"; e.onclick = () => manageEff(3)
+document.body.appendChild(e)
+e = document.createElement("button"); e.setAttribute("style",st)
+e.textContent = "/dis"; e.onclick = () => manageEff(4)
+document.body.appendChild(e)
+e = document.createElement("button"); e.setAttribute("style",st)
+e.textContent = "<lef"; e.onclick = () => manageEff(5)
+document.body.appendChild(e)
+e = document.createElement("button"); e.setAttribute("style",st)
+e.textContent = "rig>"; e.onclick = () => manageEff(6)
+document.body.appendChild(e)
+e = document.createElement("button"); e.setAttribute("style",st)
+e.textContent = ":nam"; e.onclick = () => manageEff(7)
+document.body.appendChild(e)
+
+document.body.appendChild(document.createElement("br"))
+
+e = document.createElement("div")
+e.setAttribute("id","eff")
+document.body.appendChild(e)
+
+document.body.appendChild(document.createElement("br"))
+e = document.createElement("textarea")
+e.setAttribute("style","width:100%;height:200px;"+st)
+e.value = "return [127,0,255,255]"
+e.setAttribute("id","code")
+document.body.appendChild(e)
+document.body.appendChild(document.createElement("br"))
+e = document.createElement("input")
+e.setAttribute("type","number"); e.setAttribute("style",st+";width:80px")
+e.value = "256"; e.setAttribute("id","width")
+document.body.appendChild(e)
+e = document.createElement("input")
+e.setAttribute("type","number"); e.setAttribute("style",st+";width:80px")
+e.value = "256"; e.setAttribute("id","height")
+document.body.appendChild(e)
+document.body.appendChild(document.createElement("br"))
+e = document.createElement("button"); e.setAttribute("style",st)
+e.textContent = "render"; e.onclick = render
+document.body.appendChild(e)
+e = document.createElement("button"); e.setAttribute("style",st)
+e.textContent = "copy"; e.onclick = copyImage
+document.body.appendChild(e)
+e = document.createElement("button"); e.setAttribute("style",st)
+e.textContent = "download"; e.onclick = downloadImage
+document.body.appendChild(e)
+
+document.body.appendChild(document.createElement("br"))
+
+e = document.createElement("div")
+e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;white-space:pre-line;word-break:break-word")
+e.textContent = "status will appear here"
+e.setAttribute("id","status")
+document.body.appendChild(e)
+
+document.body.appendChild(document.createElement("br"))
+document.body.appendChild(document.createElement("br"))
+
+e = document.createElement("div")
+e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;white-space:pre-line;word-break:break-word")
+e.innerHTML =
+`welcome to fogulum, a new js image editor engine made by crustulum.
+this is an image editor that uses javascript to create effects.
+effects are executed from left to right.
+pixel data is stored as [<font color="#f00">R</font>,<font color="#0f0">G</font>,<font color="#00f">B</font>,A], these numbers range from 0-255.
+the initial image has the whole thing being [0,0,0,0] and has a specific resolution.
+for every pixel, you must return [<font color="#f00">R</font>,<font color="#0f0">G</font>,<font color="#00f">B</font>,A]. this denotes the color of the pixel of the new image
+<r style="text-decoration:underline">variables =></r>
+<font color="#f0f">c</font> - the pixel data at that point of the image [<font color="#f00">R</font>,<font color="#0f0">G</font>,<font color="#00f">B</font>,A].
+<font color="#ff0">x</font>, <font color="#0ff">y</font> - the coordinates of the pixel. minimum is 0, at the top left.
+<font color="#f80">t</font> - the current unix epoch in milliseconds (Date.now()).
+<font color="#f08">getPixel(x,y,i)</font> - the pixel in the (x,y) coordinate at the image index i [<font color="#f00">R</font>,<font color="#0f0">G</font>,<font color="#00f">B</font>,A].
+<r style="text-decoration:underline">credits =></r>
+id like to thank deca quitin for the core parts of the engine.
+you can visit the original <a href="https://quitin.github.io/projects/html/media-workstation/image-editor/image-editor.html" style="color:#ff0">here</link>.`
+e.setAttribute("id","welcome")
+document.body.appendChild(e)
+
+f = document.createElement("canvas")
+f.setAttribute("width","1px")
+f.setAttribute("height","1px")
+document.body.appendChild(f)
+ff = f.getContext('2d',{willReadFrequently:true})
+
+imgs = []
+function processImages() {
+    ss = document.getElementById("upload").files
+    for (let s of ss) if (!s) return
+    imgs = []
+    for (let si = 0; si < ss.length; si++) {
+        s = ss[si]
+        rdr = new FileReader()
+        rdr.onload = (event) => {  
+            let im = new Image()
+            im.src = event.target.result
+            im.onload = () => {
+                f.width = im.width; f.height = im.height
+                document.getElementById("images").textContent += `(${si}) ${s.name}: ${f.width}x${f.height}\n`
+                ff.clearRect(0,0,f.width,f.height)
+                ff.drawImage(im,0,0)
+                let ig = ff.getImageData(0,0,f.width,f.height)
+                imgs.push(ig)
+            }
+        }
+        rdr.readAsDataURL(s)
+    }
+    setStatus("processed image(s)")
+}
+function ecanvas(w,h) {
+    let ik = new Image(w,h)
+    ik.src = ''
+    f.width = w; f.height = h
+    ff.clearRect(0,0,f.width,f.height)
+    ff.drawImage(ik,0,0,ik.width,ik.height,0,0,f.width,f.height)
+}
+function render() {
+    setStatus("rendering")
+    let tt = Date.now()
+    ff.clearRect(0,0,f.width,f.height)
+    ecanvas(Number(document.getElementById("width").value),
+            Number(document.getElementById("height").value))
+    X = ff.getImageData(0,0,f.width,f.height)
+    let w = f.width
+    let h = f.height
+    for (let ii = 0; ii < effs.length; ii++) {
+        let F = new Function("x","y","t","c","w","h",ii==selectedEff?document.getElementById("code").value:effs[ii].c)
+        nd = []
+        for (let i = 0; i < w * h; i++) {
+            let x = i % w
+            let y = ~~(i / h)
+            let c = [X.data[i*4],X.data[i*4+1],X.data[i*4+2],X.data[i*4+3]]
+            c = F(x,y,tt,c,w,h)
+            if (typeof c == 'number') {
+                c = [(c>>16)&255,(c>>8)&255,c&255,255]
+            }
+            nd[i*4] = c[0]
+            nd[i*4+1] = c[1]
+            nd[i*4+2] = c[2]
+            nd[i*4+3] = c[3]
+        }
+        for (let k = 0; k < nd.length; k++) {
+            X.data[k] = nd[k]
+        }
+    }
+    ff.putImageData(X,0,0)
+    setStatus(`rendered in ${(Date.now()-tt)/1000}s`)
+}
+function copyImage() {
+    f.toBlob((blob)=>{
+        const item = new ClipboardItem({"image/png": blob})
+        navigator.clipboard.write([item])
+    })
+    setStatus("copied")
+}
+function downloadImage() {
+    let dwl = document.createElement("a")
+    dwl.setAttribute("download", "crusto_image_editor.png")
+    f.toBlob((blob)=>{
+        let url = URL.createObjectURL(blob)
+        dwl.setAttribute("href", url)
+        dwl.click()
+    })
+    setStatus("downloaded")
+}
+function getPixel(x,y,i) {
+    if (imgs.length[i] == undefined) return [0,0,0,0]
+    if (i == undefined) i = 0
+    let fi = Math.floor
+    let w = imgs[i].width
+    let L = (fi(x)-w*fi(x/w))+(fi(y)-w*fi(y/w))*w
+    return imgs[i].data.slice(L*4,L*4+4)
+}
+function getPixel(x,y,i) {
+    if (imgs.length == 0) return [0,0,0,0]
+    if (i == undefined) i = 0
+    let fi = Math.floor
+    let w = imgs[i].width
+    let L = (fi(x)-w*fi(x/w))+(fi(y)-w*fi(y/w))*w
+    return imgs[i].data.slice(L*4,L*4+4)
+}
+selectedEff = 0
+effs = [{t: "#", c: "return [127,0,255,255]", d: false}]
+function manageEff(u) {
+    if (u == 1) addEff("#","return c",false)
+    else if (u == 2) subEff()
+    else if (u == 3) dupEff()
+    else if (u == 4) disEff()
+    else if (u == 5) lefEff()
+    else if (u == 6) rigEff()
+    else if (u == 7) namEff()
+}
+function addEff(title,code,disabled) {
+    if (effs.length == 0) {
+        document.getElementById("code").value = code
+    }
+    effs.push({t: title, c: code, d: disabled})
+    updEff()
+}
+function subEff() {
+    if (effs.length == 0) return
+    let neffs = []
+    for (let i = 0; i < effs.length; i++) {
+        if (i != selectedEff) {
+            neffs.push(effs[i])
+        }
+    }
+    document.getElementById("code").value = effs[selectedEff].c
+    effs = neffs
+    selEff(Math.max(0,selectedEff-1),false)
+    updEff()
+}
+function dupEff() {
+    if (effs.length == 0) return
+    let neffs = []
+    for (let i = 0; i < effs.length; i++) {
+        if (i == selectedEff) neffs.push(effs[i])
+        neffs.push(effs[i])
+    }
+    effs = neffs
+    selEff(Math.max(0,selectedEff+1),false)
+    updEff()
+}
+function disEff() {
+    if (effs.length == 0) return
+    effs[selectedEff].d = !effs[selectedEff].d
+    updEff()
+}
+function lefEff() {
+    if (effs.length == 0 && selectedEff > 0) return
+    let eff1 = effs[selectedEff]
+    let eff2 = effs[selectedEff-1]
+    effs[selectedEff-1] = eff1
+    effs[selectedEff] = eff2
+    updEff()
+    selEff(selectedEff-1)
+}
+function rigEff() {
+    if (effs.length == 0 && selectedEff < effs.length - 1) return
+    let eff1 = effs[selectedEff]
+    let eff2 = effs[selectedEff+1]
+    effs[selectedEff+1] = eff1
+    effs[selectedEff] = eff2
+    updEff()
+    selEff(selectedEff+1)
+}
+function namEff() {
+    if (effs.length == 0) return
+    let newtitle = prompt("enter a name for the effect")
+    if (newtitle == null) return
+    effs[selectedEff].t = newtitle
+    updEff()
+}
+function selEff(u,set) {
+    if (effs.length == 0) return
+    if (set) effs[selectedEff].c = document.getElementById("code").value
+    selectedEff = u
+    document.getElementById("code").value = effs[u].c
+    updEff()
+}
+function updEff() {
+    let eff = document.getElementById("eff")
+    eff.innerHTML = ""
+    for (let i = 0; i < effs.length; i++) {
+        let e = document.createElement("button")
+        let opa = effs[i].d?";opacity:50%":""
+        if (i == selectedEff) {
+            e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;background-color:#444;border:none;outline:white solid 1px"+opa)
+        } else {
+            e.setAttribute("style",st+opa)
+        }
+        e.textContent = effs[i].t; e.onclick = () => selEff(i,true)
+        eff.appendChild(e)
+    }
+}
+function setStatus(u) {
+    document.getElementById("welcome").textContent = ""
+    document.getElementById("status").textContent = u
+}
+updEff()
+
+</script>
+</body>
+</html>
