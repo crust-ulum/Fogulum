@@ -10,7 +10,7 @@ document.body.setAttribute("style","background-color:black")
 
 e = document.createElement("div")
 e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;font-size:30px")
-e.textContent = "Fogulum 1.3"
+e.textContent = "Fogulum 1.3.1"
 document.body.appendChild(e)
 
 e = document.createElement("label")
@@ -467,8 +467,9 @@ function loadSession() {
     	ik.src = imgsdata_.s
     	f.width = imgsdata_.w; f.height = imgsdata_.h
     	ff.clearRect(0,0,f.width,f.height)
-    	ff.drawImage(ik,0,0)
+    	ff.drawImage(ik,0,0,ik.width,ik.height,0,0,f.width,f.height)
         let imgs_ = ff.getImageData(0,0,f.width,f.height)
+        console.log(imgs_)
         imgs.push(imgs_)
         document.getElementById("images").textContent += `(${si}) ${imgsdata_.n}: ${imgsdata_.w}x${imgsdata_.h}\n`
     }
@@ -476,6 +477,7 @@ function loadSession() {
     rcanvas()
     updEff()
 }
+loadSession()
 function exportProject() {
     effs[selectedEff].c = document.getElementById("code").value
     let project = {images:JSON.stringify(imgsdata),effects:JSON.stringify(effs),resolution:`[${document.getElementById("width").value},${document.getElementById("height").value}]`}
@@ -500,7 +502,6 @@ function importProject() {
     rdr.readAsText(project)
     setStatus("imported project")
 }
-loadSession()
 function clearImages() {
     imgs = []
     imgsdata = []
