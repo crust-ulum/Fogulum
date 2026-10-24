@@ -10,7 +10,7 @@ document.body.setAttribute("style","background-color:black")
 
 e = document.createElement("div")
 e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;font-size:30px")
-e.textContent = "Fogulum 1.0.2"
+e.textContent = "Fogulum 1.0.3"
 document.body.appendChild(e)
 
 e = document.createElement("label")
@@ -135,6 +135,8 @@ imgs = []
 function processImages() {
     ss = document.getElementById("upload").files
     for (let s of ss) if (!s) return
+    let imagesname = []
+    for (let s of ss) imagesname.push(s.name)
     imgs = []
     for (let si = 0; si < ss.length; si++) {
         s = ss[si]
@@ -144,7 +146,7 @@ function processImages() {
             im.src = event.target.result
             im.onload = () => {
                 f.width = im.width; f.height = im.height
-                document.getElementById("images").textContent += `(${si}) ${s.name}: ${f.width}x${f.height}\n`
+                document.getElementById("images").textContent += `(${si}) ${imagesname[si]}: ${f.width}x${f.height}\n`
                 ff.clearRect(0,0,f.width,f.height)
                 ff.drawImage(im,0,0)
                 let ig = ff.getImageData(0,0,f.width,f.height)
