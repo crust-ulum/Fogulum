@@ -1,2 +1,3 @@
-# Fogulum
-a js image editor
+hi
+
+credits: deca quitin for much of the code
