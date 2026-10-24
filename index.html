@@ -10,7 +10,7 @@ document.body.setAttribute("style","background-color:black")
 
 e = document.createElement("div")
 e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;font-size:30px")
-e.textContent = "Fogulum 1.0.1"
+e.textContent = "Fogulum 1.0.2"
 document.body.appendChild(e)
 
 e = document.createElement("label")
@@ -90,6 +90,9 @@ document.body.appendChild(e)
 e = document.createElement("button"); e.setAttribute("style",st)
 e.textContent = "download"; e.onclick = downloadImage
 document.body.appendChild(e)
+e = document.createElement("button"); e.setAttribute("style",st); e.setAttribute("id", "autorender")
+e.textContent = "auto-render"; e.onclick = autoRender
+document.body.appendChild(e)
 
 document.body.appendChild(document.createElement("br"))
 
@@ -115,7 +118,7 @@ for every pixel, you must return [<font color="#f00">R</font>,<font color="#0f0"
 <font color="#f0f">c</font> - the pixel data at that point of the image [<font color="#f00">R</font>,<font color="#0f0">G</font>,<font color="#00f">B</font>,A].
 <font color="#ff0">x</font>, <font color="#0ff">y</font> - the coordinates of the pixel. minimum is 0, at the top left.
 <font color="#f80">t</font> - the current unix epoch in milliseconds (Date.now()).
-<font color="#f08">getPixel(x,y,i)</font> - the pixel in the (x,y) coordinate at the image index i [<font color="#f00">R</font>,<font color="#0f0">G</font>,<font color="#00f">B</font>,A].
+<font color="#f08">getPixel(x,y,i)</font> - the pixel in the (x,y) coordinate at the image index i. -1 refers to the current image. [<font color="#f00">R</font>,<font color="#0f0">G</font>,<font color="#00f">B</font>,A].
 <r style="text-decoration:underline">credits =></r>
 id like to thank deca quitin for the core parts of the engine.
 you can visit the original <a href="https://quitin.github.io/projects/html/media-workstation/image-editor/image-editor.html" style="color:#ff0">here</link>.`
@@ -212,17 +215,10 @@ function getPixel(x,y,i) {
     if (imgs.length[i] == undefined) return [0,0,0,0]
     if (i == undefined) i = 0
     let fi = Math.floor
-    let w = imgs[i].width
+    let imgr = i==-1?X:imgs[i]
+    let w = imgr.width
     let L = (fi(x)-w*fi(x/w))+(fi(y)-w*fi(y/w))*w
-    return imgs[i].data.slice(L*4,L*4+4)
-}
-function getPixel(x,y,i) {
-    if (imgs.length == 0) return [0,0,0,0]
-    if (i == undefined) i = 0
-    let fi = Math.floor
-    let w = imgs[i].width
-    let L = (fi(x)-w*fi(x/w))+(fi(y)-w*fi(y/w))*w
-    return imgs[i].data.slice(L*4,L*4+4)
+    return imgr.data.slice(L*4,L*4+4)
 }
 selectedEff = 0
 effs = [{t: "#", c: "return [127,0,255,255]", d: false}]
@@ -319,9 +315,23 @@ function updEff() {
     }
 }
 function setStatus(u) {
-    document.getElementById("welcome").textContent = ""
+    document.getElementById("welcome").innerHTML = ""
     document.getElementById("status").textContent = u
 }
+autoRendering = false
+function autoRender() {
+    autoRendering = !autoRendering
+    if (autoRendering) {
+        document.getElementById("autorender").setAttribute("style","font-family:\"Consolas\",monospace;color:black;background-color:white;border:none;outline:white solid 1px")
+    } else {
+        document.getElementById("autorender").setAttribute("style",st)
+    }
+}
+setInterval(()=>{
+    if (autoRendering) {
+        render()
+    }
+},0)
 updEff()
 
 </script>
