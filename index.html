@@ -10,7 +10,7 @@ document.body.setAttribute("style","background-color:black")
 
 e = document.createElement("div")
 e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;font-size:30px")
-e.textContent = "Fogulum 1.2"
+e.textContent = "Fogulum 1.2.1"
 document.body.appendChild(e)
 
 e = document.createElement("label")
@@ -106,7 +106,7 @@ e = document.createElement("button"); e.setAttribute("style",st); e.setAttribute
 e.textContent = "auto-render"; e.onclick = autoRender
 document.body.appendChild(e)
 e = document.createElement("button"); e.setAttribute("style",st)
-e.textContent = "save to storage"; e.onclick = saveSession
+e.textContent = "save"; e.onclick = saveSession
 document.body.appendChild(e)
 e = document.createElement("button"); e.setAttribute("style",st)
 e.textContent = "export"; e.onclick = exportProject
@@ -126,17 +126,44 @@ document.body.appendChild(document.createElement("br"))
 e = document.createElement("div")
 e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;white-space:pre-line;word-break:break-word")
 e.innerHTML =
-`welcome to fogulum, a new js image editor engine made by crustulum.
-this is an image editor that uses javascript to create effects.
+`welcome to <r style="text-decoration:underline">fogulum</r>, a new js image editor engine made by crustulum.
+this is an image editor that uses javascript to create effects. this is the manual and credits.
+the ui may look very complicated, but, as you use this engine, many things will make sense and will be easy to use.
+
 effects are executed from left to right.
 pixel data is stored as [<font color="#f00">R</font>,<font color="#0f0">G</font>,<font color="#00f">B</font>,A], these numbers range from 0-255.
 the initial image has the whole thing being [0,0,0,0] and has a specific resolution.
 for every pixel, you must return [<font color="#f00">R</font>,<font color="#0f0">G</font>,<font color="#00f">B</font>,A]. this denotes the color of the pixel of the new image
+
 <r style="text-decoration:underline">variables =></r>
 <font color="#f0f">c</font> - the pixel data at that point of the image [<font color="#f00">R</font>,<font color="#0f0">G</font>,<font color="#00f">B</font>,A].
 <font color="#ff0">x</font>, <font color="#0ff">y</font> - the coordinates of the pixel. minimum is 0, at the top left.
+<font color="#ff8">w</font>, <font color="#8ff">h</font> - the width and height of the render.
 <font color="#f80">t</font> - the current unix epoch in milliseconds (Date.now()).
 <font color="#f08">getPixel(x,y,i)</font> - the pixel in the (x,y) coordinate at the image index i. -1 refers to the current image. [<font color="#f00">R</font>,<font color="#0f0">G</font>,<font color="#00f">B</font>,A].
+
+<r style="text-decoration:underline">what do the buttons do? =></r>
+<i>upload images</i> - upload one or more images into the project. the pixels in the images can be used in effects by getPixel.
+<i>import project</i> - upload one text file to load a project.
+
+<i>+add</i> - add a effect. this defaults to <i>return c</i> which returns the image unchanged.
+<i>-sub</i> - delete the selected effect.
+<i>*dup</i> - duplicate the selected effect to the right.
+<i>/dis</i> - disable the selected effect. the effect will be ignored until you toggle it back on.
+<i><lef</i> - shift the effect one place to the left.
+<i>rig></i> - shift the effect one place to the right.
+<i>:nam</i> - opens a window to rename the selected effect.
+
+the block in the middle is the code of the selected effect.
+the two numbers right below the effect code indicate the resolution of the render, width x height.
+
+<i>render</i> - renders the final image from the initial image using the effects.
+<i>copy</i> - copies the render to clipboard.
+<i>download</i> - downloads the image to local device.
+<i>auto-render</i> - toggles auto-rendering. this makes renders happen as fast as possible, creating a dynamic effect.
+<i>save</i> - saves the entire project (effects, images, and resolution) to the browser. reloading will load the project back.
+<i>export</i> - saves the entire project (effects, images, and resolution) to local device.
+
 <r style="text-decoration:underline">credits =></r>
 id like to thank deca quitin for the core parts of the engine.
 you can visit the original <a href="https://quitin.github.io/projects/html/media-workstation/image-editor/image-editor.html" style="color:#ff0">here</link>.`
@@ -201,7 +228,7 @@ function render() {
     for (let ii = 0; ii < effs.length; ii++) {
         let F = new Function("x","y","t","c","w","h",ii==selectedEff?document.getElementById("code").value:effs[ii].c)
         nd = []
-        for (let i = 0; i < w * h; i++) {
+        for (let i = 0; i < w * h; i++) { try {
             let x = i % w
             let y = ~~(i / h)
             let c = [X.data[i*4],X.data[i*4+1],X.data[i*4+2],X.data[i*4+3]]
@@ -213,7 +240,11 @@ function render() {
             nd[i*4+1] = c[1]
             nd[i*4+2] = c[2]
             nd[i*4+3] = c[3]
-        }
+        } catch (error) {
+            setStatus(`there was an error rendering:\n${error.stack}`)
+            rcanvas()
+            return 
+        } }
         for (let k = 0; k < nd.length; k++) {
             X.data[k] = nd[k]
         }
