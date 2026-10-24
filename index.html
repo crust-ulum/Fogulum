@@ -10,7 +10,7 @@ document.body.setAttribute("style","background-color:black")
 
 e = document.createElement("div")
 e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;font-size:30px")
-e.textContent = "Fogulum 1.1"
+e.textContent = "Fogulum 1.2"
 document.body.appendChild(e)
 
 e = document.createElement("label")
@@ -25,6 +25,18 @@ e.setAttribute("multiple","")
 e.setAttribute("id","upload")
 e.oninput = processImages
 document.getElementById("s_upload").appendChild(e)
+
+e = document.createElement("label")
+e.textContent = "import project"
+e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;outline:white solid 1px;padding-left:5px;padding-right:5px")
+e.setAttribute("id","s_import")
+document.body.appendChild(e)
+e = document.createElement("input")
+e.setAttribute("style","display:none")
+e.setAttribute("type","file")
+e.setAttribute("id","import")
+e.oninput = importProject
+document.getElementById("s_import").appendChild(e)
 
 document.body.appendChild(document.createElement("br"))
 
@@ -94,7 +106,10 @@ e = document.createElement("button"); e.setAttribute("style",st); e.setAttribute
 e.textContent = "auto-render"; e.onclick = autoRender
 document.body.appendChild(e)
 e = document.createElement("button"); e.setAttribute("style",st)
-e.textContent = "save"; e.onclick = saveSession
+e.textContent = "save to storage"; e.onclick = saveSession
+document.body.appendChild(e)
+e = document.createElement("button"); e.setAttribute("style",st)
+e.textContent = "export"; e.onclick = exportProject
 document.body.appendChild(e)
 
 document.body.appendChild(document.createElement("br"))
@@ -215,7 +230,7 @@ function copyImage() {
 }
 function downloadImage() {
     let dwl = document.createElement("a")
-    dwl.setAttribute("download", "crusto_image_editor.png")
+    dwl.setAttribute("download", "fogulum_image.png")
     f.toBlob((blob)=>{
         let url = URL.createObjectURL(blob)
         dwl.setAttribute("href", url)
@@ -346,10 +361,10 @@ setInterval(()=>{
     }
 },0)
 function saveSession() {
-    effs[selectedEff] = document.getElementById("code").value
+    effs[selectedEff].c = document.getElementById("code").value
     localStorage.setItem("images",JSON.stringify(imgsdata))
     localStorage.setItem("effects",JSON.stringify(effs))
-    localStorage.setItem("resolution",`[${Number(document.getElementById("width").value)},${Number(document.getElementById("height").value)}]`)
+    localStorage.setItem("resolution",`[${document.getElementById("width").value},${document.getElementById("height").value}]`)
     setStatus("session saved")
 }
 function loadSession() {
@@ -375,6 +390,30 @@ function loadSession() {
     document.getElementById("code").value = effs[0].c
     rcanvas()
     updEff()
+}
+function exportProject() {
+    effs[selectedEff].c = document.getElementById("code").value
+    let project = {images:JSON.stringify(imgsdata),effects:JSON.stringify(effs),resolution:`[${document.getElementById("width").value},${document.getElementById("height").value}]`}
+    project = JSON.stringify(project)
+    let dwl = document.createElement("a")
+    dwl.setAttribute("download", "fogulum_project.txt")
+    dwl.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(project))
+    dwl.click()
+    setStatus("exported project")
+}
+function importProject() {
+    let project = document.getElementById("import").files[0]
+    rdr = new FileReader()
+    rdr.onload = (event) => {
+        project = JSON.parse(event.target.result)
+        console.log(project)
+	localStorage.setItem("images", project["images"])
+	localStorage.setItem("effects", project["effects"])
+	localStorage.setItem("resolution", project["resolution"])
+        loadSession()
+    }
+    rdr.readAsText(project)
+    setStatus("imported project")
 }
 loadSession()
 
