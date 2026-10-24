@@ -10,7 +10,7 @@ document.body.setAttribute("style","background-color:black")
 
 e = document.createElement("div")
 e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;font-size:30px")
-e.textContent = "Fogulum 1.2.1c"
+e.textContent = "Fogulum 1.2.1d"
 document.body.appendChild(e)
 
 e = document.createElement("label")
@@ -226,7 +226,12 @@ function render() {
     let w = f.width
     let h = f.height
     for (let ii = 0; ii < effs.length; ii++) {
-        let F = new Function("x","y","t","c","w","h",ii==selectedEff?document.getElementById("code").value:effs[ii].c)
+        let F = try { new Function("x","y","t","c","w","h",ii==selectedEff?document.getElementById("code").value:effs[ii].c) }
+ 	catch (error) {
+            setStatus(`there was an error parsing effect #${ii+1}:\n${error.stack}`)
+            rcanvas()
+            return 
+        }
         nd = []
         for (let i = 0; i < w * h; i++) { try {
             let x = i % w
@@ -270,7 +275,7 @@ function downloadImage() {
     setStatus("downloaded")
 }
 function getPixel(x,y,i) {
-    if (imgs.length[i] == undefined) return [0,0,0,0]
+    if (imgs[i] == undefined) return [0,0,0,0]
     if (i == undefined) i = 0
     let fi = Math.floor
     let imgr = i==-1?X:imgs[i]
