@@ -10,7 +10,7 @@ document.body.setAttribute("style","background-color:black")
 
 e = document.createElement("div")
 e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;font-size:30px")
-e.textContent = "Fogulum 1.0.3"
+e.textContent = "Fogulum 1.1"
 document.body.appendChild(e)
 
 e = document.createElement("label")
@@ -93,6 +93,9 @@ document.body.appendChild(e)
 e = document.createElement("button"); e.setAttribute("style",st); e.setAttribute("id", "autorender")
 e.textContent = "auto-render"; e.onclick = autoRender
 document.body.appendChild(e)
+e = document.createElement("button"); e.setAttribute("style",st)
+e.textContent = "save"; e.onclick = saveSession
+document.body.appendChild(e)
 
 document.body.appendChild(document.createElement("br"))
 
@@ -131,13 +134,18 @@ f.setAttribute("height","1px")
 document.body.appendChild(f)
 ff = f.getContext('2d',{willReadFrequently:true})
 
-imgs = []
+imgs = []; imgsdata = []
+function rcanvas() {
+    f.width = 1; f.height = 1
+    ff.clearRect(0,0,1,1)
+}
 function processImages() {
+    document.getElementById("images").textContent = ""
     ss = document.getElementById("upload").files
     for (let s of ss) if (!s) return
     let imagesname = []
     for (let s of ss) imagesname.push(s.name)
-    imgs = []
+    imgs = []; imgsdata = []
     for (let si = 0; si < ss.length; si++) {
         s = ss[si]
         rdr = new FileReader()
@@ -147,6 +155,7 @@ function processImages() {
             im.onload = () => {
                 f.width = im.width; f.height = im.height
                 document.getElementById("images").textContent += `(${si}) ${imagesname[si]}: ${f.width}x${f.height}\n`
+                imgsdata.push({w:im.width,h:im.height,s:im.src,n:imagesname[si]})
                 ff.clearRect(0,0,f.width,f.height)
                 ff.drawImage(im,0,0)
                 let ig = ff.getImageData(0,0,f.width,f.height)
@@ -155,11 +164,12 @@ function processImages() {
         }
         rdr.readAsDataURL(s)
     }
+    rcanvas()
     setStatus("processed image(s)")
 }
 function ecanvas(w,h) {
     let ik = new Image(w,h)
-    ik.src = ''
+    ik.src = ""
     f.width = w; f.height = h
     ff.clearRect(0,0,f.width,f.height)
     ff.drawImage(ik,0,0,ik.width,ik.height,0,0,f.width,f.height)
@@ -316,6 +326,7 @@ function updEff() {
         eff.appendChild(e)
     }
 }
+updEff()
 function setStatus(u) {
     document.getElementById("welcome").innerHTML = ""
     document.getElementById("status").textContent = u
@@ -334,7 +345,38 @@ setInterval(()=>{
         render()
     }
 },0)
-updEff()
+function saveSession() {
+    effs[selectedEff] = document.getElementById("code").value
+    localStorage.setItem("images",JSON.stringify(imgsdata))
+    localStorage.setItem("effects",JSON.stringify(effs))
+    localStorage.setItem("resolution",`[${Number(document.getElementById("width").value)},${Number(document.getElementById("height").value)}]`)
+    setStatus("session saved")
+}
+function loadSession() {
+    if (localStorage["effects"] == undefined || localStorage["resolution"] == undefined || localStorage["images"] == undefined) return
+    effs = JSON.parse(localStorage["effects"])
+    let resol = JSON.parse(localStorage["resolution"])
+    document.getElementById("width").value = resol[0] + ""
+    document.getElementById("height").value = resol[1] + ""
+    imgsdata = JSON.parse(localStorage["images"])
+    imgs = []
+    document.getElementById("images").textContent = ""
+    for (let si = 0; si < imgsdata.length; si++) {
+        let imgsdata_ = imgsdata[si]
+    	let ik = new Image(imgsdata_.w,imgsdata_.h)
+    	ik.src = imgsdata_.s
+    	f.width = imgsdata_.w; f.height = imgsdata_.h
+    	ff.clearRect(0,0,f.width,f.height)
+    	ff.drawImage(ik,0,0)
+        let imgs_ = ff.getImageData(0,0,f.width,f.height)
+        imgs.push(imgs_)
+        document.getElementById("images").textContent += `(${si}) ${imgsdata_.n}: ${imgsdata_.w}x${imgsdata_.h}\n`
+    }
+    document.getElementById("code").value = effs[0].c
+    rcanvas()
+    updEff()
+}
+loadSession()
 
 </script>
 </body>
