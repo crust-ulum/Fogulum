@@ -10,7 +10,7 @@ document.body.setAttribute("style","background-color:black")
 
 e = document.createElement("div")
 e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;font-size:30px")
-e.textContent = "Fogulum 1.0"
+e.textContent = "Fogulum 1.0.1"
 document.body.appendChild(e)
 
 e = document.createElement("label")
@@ -21,6 +21,7 @@ document.body.appendChild(e)
 e = document.createElement("input")
 e.setAttribute("style","display:none")
 e.setAttribute("type","file")
+e.setAttribute("multiple","")
 e.setAttribute("id","upload")
 e.oninput = processImages
 document.getElementById("s_upload").appendChild(e)
