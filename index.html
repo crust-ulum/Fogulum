@@ -10,7 +10,7 @@ document.body.setAttribute("style","background-color:black")
 
 e = document.createElement("div")
 e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;font-size:30px")
-e.textContent = "Fogulum 1.3.1"
+e.textContent = "Fogulum 1.3.3"
 document.body.appendChild(e)
 
 e = document.createElement("label")
@@ -190,13 +190,19 @@ the two numbers right below the effect code indicate the resolution of the rende
 <i>export</i> - saves the entire project (effects, images, and resolution) to local device.
 
 <r style="text-decoration:underline">gifs =></r>
-
 when you first click on the "gif" button, three new values will appear. these correspond to
 the number of frames, the frames per second, and the quality of the image.
 note that the lower the number, the better quality.
 there is an extra variable, <font color="#0f8">V</font>, which starts at 1 and counts up.
 <font color="#0f8">V</font> = 1 at frame 1, <font color="#0f8">V</font> = 2 at frame 2, etc.
 click the <i>export as gif</i> button to start rendering the frames. while rendering, click on it again to stop rendering.
+
+<r style="text-decoration:underline">some programs to give you intuition =></r>
+<font color="#f88">return [255,0,0,255]</font> - completely red image
+<font color="#f88">return [0,255,255,127]</font> - cyan with 50% transparency
+<font color="#f88">return [0,y/h*255,0,255]</font> - gradient of green on the bottom and black on top
+<font color="#f88">b = 1-(t/1000)%1; b*=255; return [b,b,b,255]</font> - flashing every second
+<font color="#f88">b = Math.sin(t/1000*2*Math.PI)/2+0.5; b*=255; return [b,0,b/2,255]</font> - sinusoidal rose brightness
 
 <r style="text-decoration:underline">credits =></r>
 id like to thank deca quitin for the core parts of the engine.
@@ -324,13 +330,17 @@ function downloadImage() {
     setStatus("downloaded")
 }
 function getPixel(x,y,i) {
-    if (imgs[i] == undefined) return [0,0,0,0]
     if (i == undefined) i = 0
+    if (imgs[i] == undefined) return null
     let fi = Math.floor
     let imgr = i==-1?X:imgs[i]
     let w = imgr.width
     let L = (fi(x)-w*fi(x/w))+(fi(y)-w*fi(y/w))*w
-    return imgr.data.slice(L*4,L*4+4)
+    return [imgr.data[L*4],imgr.data[L*4+1],imgr.data[L*4+2],imgr.data[L*4+3]]
+}
+function getDims(i) {
+    if (imgs[i] == undefined) return [-1,-1]
+    return [imgs[i].width,imgs[i].height]
 }
 selectedEff = 0
 effs = [{t: "#", c: "return [127,0,255,255]", d: false}]
@@ -465,13 +475,15 @@ function loadSession() {
         let imgsdata_ = imgsdata[si]
     	let ik = new Image(imgsdata_.w,imgsdata_.h)
     	ik.src = imgsdata_.s
-    	f.width = imgsdata_.w; f.height = imgsdata_.h
-    	ff.clearRect(0,0,f.width,f.height)
-    	ff.drawImage(ik,0,0,ik.width,ik.height,0,0,f.width,f.height)
-        let imgs_ = ff.getImageData(0,0,f.width,f.height)
-        console.log(imgs_)
-        imgs.push(imgs_)
-        document.getElementById("images").textContent += `(${si}) ${imgsdata_.n}: ${imgsdata_.w}x${imgsdata_.h}\n`
+        ik.addEventListener("load", ()=>{
+    	    f.width = imgsdata_.w; f.height = imgsdata_.h
+    	    ff.clearRect(0,0,f.width,f.height)
+    	    ff.drawImage(ik,0,0,ik.width,ik.height,0,0,f.width,f.height)
+            let imgs_ = ff.getImageData(0,0,f.width,f.height)
+            console.log(imgs_.data[3])
+            imgs.push(imgs_)
+            document.getElementById("images").textContent += `(${si}) ${imgsdata_.n}: ${imgsdata_.w}x${imgsdata_.h}\n`
+        })
     }
     document.getElementById("code").value = effs[0].c
     rcanvas()
