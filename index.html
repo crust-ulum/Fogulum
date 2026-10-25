@@ -10,7 +10,7 @@ document.body.setAttribute("style","background-color:black")
 
 e = document.createElement("div")
 e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;font-size:30px")
-e.textContent = "Fogulum 1.3.5"
+e.textContent = "Fogulum 1.3.6"
 document.body.appendChild(e)
 
 e = document.createElement("label")
@@ -204,17 +204,17 @@ NOTE: i cannot convert gifs into mp4s in here. please use an external site/progr
 <font color="#f88">b = 1-(t/1000)%1; b*=255; return [b,b,b,255]</font> - flashing every second
 <font color="#f88">b = Math.sin(t/1000*2*Math.PI)/2+0.5; b*=255; return [b,0,b/2,255]</font> - sinusoidal rose brightness
 
-<r style="text-decoration:underline">hl =></r>
-hl is a variable that has some functions.
-<font color="#804">hl.</font><font color="#f08">getPixel(x,y,i)</font> - the pixel in the (x,y) coordinate at the image index i. -1 refers to the current image. [<font color="#f00">R</font>,<font color="#0f0">G</font>,<font color="#00f">B</font>,A].
-<font color="#804">hl.</font><font color="#f08">getDims(i)</font> - gets the dimensions of image index i. returns [-1,-1] if not supported.
-<font color="#804">hl.</font><font color="#f08">r(x,y)</font> - sqrt(x*x+y*y).
-<font color="#804">hl.</font><font color="#f08">a(x,y)</font> - Math.atan2(y,x).
-<font color="#804">hl.</font><font color="#f08">e(r,a)</font> - [Math.cos(a)*r,Math.sin(a)*r].
-<font color="#804">hl.</font><font color="#f08">mod(x,y)</font> - the remainder of x/y. (always positive)
-<font color="#804">hl.</font><font color="#f08">hsv2rgb(h,s,v)</font> - converts [H,S,V] into [R,G,B].
-<font color="#804">hl.</font><font color="#f08">rgb2hsv(r,g,b)</font> - converts [R,G,B] into [H,S,V].
-
+<r style="text-decoration:underline">fo =></r>
+fo is a variable that has some functions.
+<font color="#804">fo.</font><font color="#f08">getPixel(x,y,i)</font> - the pixel in the (x,y) coordinate at the image index i. -1 refers to the current image. [<font color="#f00">R</font>,<font color="#0f0">G</font>,<font color="#00f">B</font>,A].
+<font color="#804">fo.</font><font color="#f08">getDims(i)</font> - gets the dimensions of image index i. returns [-1,-1] if not supported.
+<font color="#804">fo.</font><font color="#f08">r(x,y)</font> - sqrt(x*x+y*y).
+<font color="#804">fo.</font><font color="#f08">a(x,y)</font> - Math.atan2(y,x).
+<font color="#804">fo.</font><font color="#f08">e(r,a)</font> - [Math.cos(a)*r,Math.sin(a)*r].
+<font color="#804">fo.</font><font color="#f08">mod(x,y)</font> - the remainder of x/y. (always positive)
+<font color="#804">fo.</font><font color="#f08">hsv2rgb(h,s,v)</font> - converts [H,S,V] into [R,G,B].
+<font color="#804">fo.</font><font color="#f08">rgb2hsv(r,g,b)</font> - converts [R,G,B] into [H,S,V].
+<font color="#804">fo.</font><font color="#f08">text(s,px,py,col,font)</font> - puts text into the canvas. parameters: (string, positionx, positiony, color, font). px and py refer to the bottom left corner. font contains the font size and family.
 
 <r style="text-decoration:underline">credits =></r>
 id like to thank deca quitin for the core parts of the engine.
@@ -480,13 +480,12 @@ function loadSession() {
     	    ff.clearRect(0,0,f.width,f.height)
     	    ff.drawImage(ik,0,0,ik.width,ik.height,0,0,f.width,f.height)
             let imgs_ = ff.getImageData(0,0,f.width,f.height)
-            console.log(imgs_.data[3])
+            rcanvas()
             imgs.push(imgs_)
             document.getElementById("images").textContent += `(${si}) ${imgsdata_.n}: ${imgsdata_.w}x${imgsdata_.h}\n`
         })
     }
     document.getElementById("code").value = effs[0].c
-    rcanvas()
     updEff()
 }
 loadSession()
@@ -559,8 +558,8 @@ function gifExportStop() {
     setStatus("stopped rendering gif"); rcanvas()
 }
 
-hl = {}
-hl.getPixel = (x,y,i) => {
+fo = {}
+fo.getPixel = (x,y,i) => {
     if (i == undefined) i = 0
     if (imgs[i] == undefined) return null
     let fi = Math.floor
@@ -569,27 +568,32 @@ hl.getPixel = (x,y,i) => {
     let L = (fi(x)-w*fi(x/w))+(fi(y)-w*fi(y/w))*w
     return [imgr.data[L*4],imgr.data[L*4+1],imgr.data[L*4+2],imgr.data[L*4+3]]
 }
-hl.getDims = (i) => {
+fo.getDims = (i) => {
     if (imgs[i] == undefined) return [-1,-1]
     return [imgs[i].width,imgs[i].height]
 }
-hl.r = (x,y) => sqrt(x*x+y*y)
-hl.a = (x,y) => Math.atan2(y,x)
-hl.e = (r,a) => [Math.cos(a)*r,Math.sin(a)*r]
-hl.mod = (x,y) => x-Math.floor(x/y)*y
-hl.hsv2rgb = (h,s,v) => {
-    h = hl.mod(h,360)
+fo.r = (x,y) => sqrt(x*x+y*y)
+fo.a = (x,y) => Math.atan2(y,x)
+fo.e = (r,a) => [Math.cos(a)*r,Math.sin(a)*r]
+fo.mod = (x,y) => x-Math.floor(x/y)*y
+fo.hsv2rgb = (h,s,v) => {
+    h = fo.mod(h,360)
     let c = v*s
-    let x = c*(1-Math.abs(hl.mod(h/60,2)-1))
+    let x = c*(1-Math.abs(fo.mod(h/60,2)-1))
     let xi = Math.floor(h/60)
     let [r_,g_,b_] = [[c,x,0,0,x,c][xi],[x,c,c,x,0,0][xi],[0,0,x,c,c,x][xi]]
     return [r_+v-c,g_+v-c,b_+v-c].map((u)=>u*255)
 }
-hl.rgb2hsv = (r,g,b) => {
+fo.rgb2hsv = (r,g,b) => {
     let [r_,g_,b_] = [r/255,g/255,b/255]
     let cM = Math.max(r_,g_,b_)
     let d = cM-Math.min(r_,g_,b_)
-    return [(d==0?0:cM==r_?60*(hl.mod((g_-b_)/d,6)):cM==g_?60*((b_-r_)/d+2):cM==b_?60*((r_-g_)/d+4):0),(cM==0?0:d/cM),cM]
+    return [(d==0?0:cM==r_?60*(fo.mod((g_-b_)/d,6)):cM==g_?60*((b_-r_)/d+2):cM==b_?60*((r_-g_)/d+4):0),(cM==0?0:d/cM),cM]
+}
+fo.text = (s,px,py,col,font) => {
+    ff.fillStyle = col || "#ffffff"
+    ff.font = font || "20px \"Consolas\", monospace"
+    ff.fillText(s,px,py)
 }
 
 
