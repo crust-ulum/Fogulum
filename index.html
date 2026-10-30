@@ -10,7 +10,7 @@ document.body.setAttribute("style","background-color:black")
 
 e = document.createElement("div")
 e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;font-size:30px")
-e.textContent = "Fogulum 1.(3 1/2)"
+e.textContent = "Fogulum 1.(3 and a half).2"
 document.body.appendChild(e)
 
 e = document.createElement("label")
@@ -312,7 +312,7 @@ function render() {
             setStatus(`there was an error rendering:\n${error.stack}`)
             rcanvas()
             return 
-        }
+	}
         X = ff.getImageData(0,0,f.width,f.height)
         let nd = []
         for (let i = 0; i < w * h; i++) { try {
@@ -335,12 +335,8 @@ function render() {
         for (let k = 0; k < nd.length; k++) {
             X.data[k] = nd[k]
         }
-        try { AC() } catch (error) {
-            setStatus(`there was an error rendering:\n${error.stack}`)
-            rcanvas()
-            return 
-        }
         ff.putImageData(X,0,0)
+
     }
     if (constructinggif) {
         setStatus(`rendered frame ${V} of ${document.getElementById("gif_frames").value} (${(V/Number(document.getElementById("gif_frames").value)*100).toFixed(2)}) in ${(Date.now()-tt)/1000}s`)
