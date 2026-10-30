@@ -10,7 +10,7 @@ document.body.setAttribute("style","background-color:black")
 
 e = document.createElement("div")
 e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;font-size:30px")
-e.textContent = "Fogulum 1.3.6"
+e.textContent = "Fogulum 1.(3 1/2)"
 document.body.appendChild(e)
 
 e = document.createElement("label")
@@ -78,11 +78,23 @@ e.setAttribute("id","eff")
 document.body.appendChild(e)
 
 document.body.appendChild(document.createElement("br"))
+
+e = document.createElement("textarea")
+e.setAttribute("style","width:100%;height:25px;"+st)
+e.value = "// beforecode"
+e.setAttribute("id","beforecode")
+document.body.appendChild(e)
 e = document.createElement("textarea")
 e.setAttribute("style","width:100%;height:200px;"+st)
 e.value = "return [127,0,255,255]"
 e.setAttribute("id","code")
 document.body.appendChild(e)
+e = document.createElement("textarea")
+e.setAttribute("style","width:100%;height:25px;"+st)
+e.value = "// aftercode"
+e.setAttribute("id","aftercode")
+document.body.appendChild(e)
+
 document.body.appendChild(document.createElement("br"))
 
 e = document.createElement("input")
@@ -158,6 +170,7 @@ effects are executed from left to right.
 pixel data is stored as [<font color="#f00">R</font>,<font color="#0f0">G</font>,<font color="#00f">B</font>,A], these numbers range from 0-255.
 the initial image has the whole thing being [0,0,0,0] and has a specific resolution.
 for every pixel, you must return [<font color="#f00">R</font>,<font color="#0f0">G</font>,<font color="#00f">B</font>,A]. this denotes the color of the pixel of the new image.
+PLEASE NOTE: f and ff are core parts of the engine, so dont declare any variables that overwrite it.
 
 <r style="text-decoration:underline">variables =></r>
 <font color="#f0f">c</font> - the pixel data at that point of the image [<font color="#f00">R</font>,<font color="#0f0">G</font>,<font color="#00f">B</font>,A].
@@ -177,7 +190,10 @@ for every pixel, you must return [<font color="#f00">R</font>,<font color="#0f0"
 <i>rig&gt;</i> - shift the effect one place to the right.
 <i>:nam</i> - opens a window to rename the selected effect.
 
-the block in the middle is the code of the selected effect.
+the the two thin blocks and the large middle block is as follows:
+the <i>"beforecode"</i> executes ONCE before (1) the image is processed into pixels and (2) the computation of each pixel is executed.
+the <i>"code"</i> executes for each pixel, returning a [<font color="#f00">R</font>,<font color="#0f0">G</font>,<font color="#00f">B</font>,A] format.
+the <i>"aftercode"</i> executes ONCE after the computation of each pixel is executed.
 the two numbers right below the effect code indicate the resolution of the render, width x height.
 
 <i>render</i> - renders the final image from the initial image using the effects.
@@ -216,17 +232,20 @@ fo is a variable that has some functions.
 <font color="#804">fo.</font><font color="#f08">rgb2hsv(r,g,b)</font> - converts [R,G,B] into [H,S,V].
 <font color="#804">fo.</font><font color="#f08">text(s,px,py,col,font)</font> - puts text into the canvas. parameters: (string, positionx, positiony, color, font). px and py refer to the bottom left corner. font contains the font size and family.
 
-<r style="text-decoration:underline">credits =></r>
+<r style="text-decoration:underline">credits & notes =></r>
 id like to thank deca quitin for the core parts of the engine.
-you can visit the original <a href="https://quitin.github.io/projects/html/media-workstation/image-editor/image-editor.html" style="color:#ff0">here</link>.`
+you can visit the original <a href="https://quitin.github.io/projects/html/media-workstation/image-editor/image-editor.html" style="color:#ff0">here</a>.
+although this engine isn't vibecoded, the engine is made in a "HORRIFYING" way
+llama
+`
 e.setAttribute("id","welcome")
 document.body.appendChild(e)
 
-f = document.createElement("canvas")
+const f = document.createElement("canvas")
 f.setAttribute("width","1px")
 f.setAttribute("height","1px")
 document.body.appendChild(f)
-ff = f.getContext('2d',{willReadFrequently:true})
+const ff = f.getContext('2d',{willReadFrequently:true})
 
 imgs = []; imgsdata = []; V = 1
 function rcanvas() {
@@ -279,15 +298,23 @@ function render() {
     let h = f.height
     for (let ii = 0; ii < effs.length; ii++) {
         if (effs[ii].d == true) continue
-        let F = null
+        let F = null; let BC = null; let AC = null
         try {
+            BC = new Function(ii==selectedEff?document.getElementById("beforecode").value:effs[ii].bc)
+            AC = new Function(ii==selectedEff?document.getElementById("aftercode").value:effs[ii].ac)
             F = new Function("x","y","t","c","w","h",ii==selectedEff?document.getElementById("code").value:effs[ii].c) }
  	catch (error) {
             setStatus(`there was an error parsing effect #${ii+1}:\n${error.stack}`)
             rcanvas()
             return 
         }
-        nd = []
+        try { BC() } catch (error) {
+            setStatus(`there was an error rendering:\n${error.stack}`)
+            rcanvas()
+            return 
+        }
+        X = ff.getImageData(0,0,f.width,f.height)
+        let nd = []
         for (let i = 0; i < w * h; i++) { try {
             let x = i % w
             let y = ~~(i / h)
@@ -308,8 +335,13 @@ function render() {
         for (let k = 0; k < nd.length; k++) {
             X.data[k] = nd[k]
         }
+        try { AC() } catch (error) {
+            setStatus(`there was an error rendering:\n${error.stack}`)
+            rcanvas()
+            return 
+        }
+        ff.putImageData(X,0,0)
     }
-    ff.putImageData(X,0,0)
     if (constructinggif) {
         setStatus(`rendered frame ${V} of ${document.getElementById("gif_frames").value} (${(V/Number(document.getElementById("gif_frames").value)*100).toFixed(2)}) in ${(Date.now()-tt)/1000}s`)
         GIF.addFrame(ff, false); V++
@@ -343,9 +375,9 @@ function downloadImage() {
     setStatus("downloaded")
 }
 selectedEff = 0
-effs = [{t: "#", c: "return [127,0,255,255]", d: false}]
+effs = [{t: "#", bc: "// beforecode", c: "return [127,0,255,255]", ac: "// aftercode", d: false}]
 function manageEff(u) {
-    if (u == 1) addEff("#","return c",false)
+    if (u == 1) addEff("#",["","return c",""],false)
     else if (u == 2) subEff()
     else if (u == 3) dupEff()
     else if (u == 4) disEff()
@@ -355,9 +387,11 @@ function manageEff(u) {
 }
 function addEff(title,code,disabled) {
     if (effs.length == 0) {
-        document.getElementById("code").value = code
+        document.getElementById("beforecode").value = code[0]
+        document.getElementById("code").value = code[1]
+        document.getElementById("aftercode").value = code[2]
     }
-    effs.push({t: title, c: code, d: disabled})
+    effs.push({t: title, bc: code[0], c: code[1], ac: code[2], d: disabled})
     updEff()
 }
 function subEff() {
@@ -368,7 +402,9 @@ function subEff() {
             neffs.push(effs[i])
         }
     }
+    document.getElementById("beforecode").value = effs[selectedEff].bc
     document.getElementById("code").value = effs[selectedEff].c
+    document.getElementById("aftercode").value = effs[selectedEff].ac
     effs = neffs
     selEff(Math.max(0,selectedEff-1),false)
     updEff()
@@ -416,9 +452,15 @@ function namEff() {
 }
 function selEff(u,set) {
     if (effs.length == 0) return
-    if (set) effs[selectedEff].c = document.getElementById("code").value
+    if (set) {
+        effs[selectedEff].bc = document.getElementById("beforecode").value
+        effs[selectedEff].c = document.getElementById("code").value
+        effs[selectedEff].ac = document.getElementById("aftercode").value
+    }
     selectedEff = u
+    document.getElementById("beforecode").value = effs[u].bc
     document.getElementById("code").value = effs[u].c
+    document.getElementById("aftercode").value = effs[u].ac
     updEff()
 }
 function updEff() {
@@ -456,7 +498,9 @@ setInterval(()=>{
     }
 },0)
 function saveSession() {
+    effs[selectedEff].bc = document.getElementById("beforecode").value||"// beforecode"
     effs[selectedEff].c = document.getElementById("code").value
+    effs[selectedEff].ac = document.getElementById("aftercode").value||"// aftercode"
     localStorage.setItem("images",JSON.stringify(imgsdata))
     localStorage.setItem("effects",JSON.stringify(effs))
     localStorage.setItem("resolution",`[${document.getElementById("width").value},${document.getElementById("height").value}]`)
@@ -485,12 +529,16 @@ function loadSession() {
             document.getElementById("images").textContent += `(${si}) ${imgsdata_.n}: ${imgsdata_.w}x${imgsdata_.h}\n`
         })
     }
+    document.getElementById("beforecode").value = effs[0].bc||"// beforecode"
     document.getElementById("code").value = effs[0].c
+    document.getElementById("aftercode").value = effs[0].ac||"// aftercode"
     updEff()
 }
 loadSession()
 function exportProject() {
+    effs[selectedEff].bc = document.getElementById("beforecode").value
     effs[selectedEff].c = document.getElementById("code").value
+    effs[selectedEff].ac = document.getElementById("aftercode").value
     let project = {images:JSON.stringify(imgsdata),effects:JSON.stringify(effs),resolution:`[${document.getElementById("width").value},${document.getElementById("height").value}]`}
     project = JSON.stringify(project)
     let dwl = document.createElement("a")
