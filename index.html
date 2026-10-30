@@ -10,7 +10,8 @@ document.body.setAttribute("style","background-color:black")
 
 e = document.createElement("div")
 e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;font-size:30px")
-e.textContent = "Fogulum 1.(3 and a half).2"
+e.textContent = "Fogulum 1.(3 and a half).3"
+
 document.body.appendChild(e)
 
 e = document.createElement("label")
@@ -194,6 +195,7 @@ the the two thin blocks and the large middle block is as follows:
 the <i>"beforecode"</i> executes ONCE before (1) the image is processed into pixels and (2) the computation of each pixel is executed.
 the <i>"code"</i> executes for each pixel, returning a [<font color="#f00">R</font>,<font color="#0f0">G</font>,<font color="#00f">B</font>,A] format.
 the <i>"aftercode"</i> executes ONCE after the computation of each pixel is executed.
+all pieces of code can use <font color="#ff8">w</font>, <font color="#8ff">h</font> and <font color="#f80">t</font>, but only <font color="#ff0">x</font>, <font color="#0ff">y</font>, and <font color="#f0f">c</font> can be used by the central code.
 the two numbers right below the effect code indicate the resolution of the render, width x height.
 
 <i>render</i> - renders the final image from the initial image using the effects.
@@ -211,7 +213,6 @@ note that the lower the number, the better quality.
 there is an extra variable, <font color="#0f8">V</font>, which starts at 1 and counts up.
 <font color="#0f8">V</font> = 1 at frame 1, <font color="#0f8">V</font> = 2 at frame 2, etc.
 click the <i>export as gif</i> button to start rendering the frames. while rendering, click on it again to stop rendering.
-NOTE: i cannot convert gifs into mp4s in here. please use an external site/program to do so.
 
 <r style="text-decoration:underline">some programs to give you intuition =></r>
 <font color="#f88">return [255,0,0,255]</font> - completely red image
@@ -236,6 +237,7 @@ fo is a variable that has some functions.
 id like to thank deca quitin for the core parts of the engine.
 you can visit the original <a href="https://quitin.github.io/projects/html/media-workstation/image-editor/image-editor.html" style="color:#ff0">here</a>.
 although this engine isn't vibecoded, the engine is made in a "HORRIFYING" way
+you can use an external website to convert from gifs into other video formats (ex. mp4s)
 llama
 `
 e.setAttribute("id","welcome")
@@ -300,15 +302,15 @@ function render() {
         if (effs[ii].d == true) continue
         let F = null; let BC = null; let AC = null
         try {
-            BC = new Function(ii==selectedEff?document.getElementById("beforecode").value:effs[ii].bc)
-            AC = new Function(ii==selectedEff?document.getElementById("aftercode").value:effs[ii].ac)
+            BC = new Function("t","w","h",ii==selectedEff?document.getElementById("beforecode").value:effs[ii].bc)
+            AC = new Function("t","w","h",ii==selectedEff?document.getElementById("aftercode").value:effs[ii].ac)
             F = new Function("x","y","t","c","w","h",ii==selectedEff?document.getElementById("code").value:effs[ii].c) }
  	catch (error) {
             setStatus(`there was an error parsing effect #${ii+1}:\n${error.stack}`)
             rcanvas()
             return 
         }
-        try { BC() } catch (error) {
+        try { BC(tt,w,h) } catch (error) {
             setStatus(`there was an error rendering:\n${error.stack}`)
             rcanvas()
             return 
@@ -317,7 +319,7 @@ function render() {
         let nd = []
         for (let i = 0; i < w * h; i++) { try {
             let x = i % w
-            let y = ~~(i / h)
+            let y = Math.floor(i/w)
             let c = [X.data[i*4],X.data[i*4+1],X.data[i*4+2],X.data[i*4+3]]
             c = F(x,y,tt,c,w,h)
             if (typeof c == 'number') {
@@ -335,8 +337,12 @@ function render() {
         for (let k = 0; k < nd.length; k++) {
             X.data[k] = nd[k]
         }
+        try { AC(tt,w,h) } catch (error) {
+            setStatus(`there was an error rendering:\n${error.stack}`)
+            rcanvas()
+            return 
+	}
         ff.putImageData(X,0,0)
-
     }
     if (constructinggif) {
         setStatus(`rendered frame ${V} of ${document.getElementById("gif_frames").value} (${(V/Number(document.getElementById("gif_frames").value)*100).toFixed(2)}) in ${(Date.now()-tt)/1000}s`)
