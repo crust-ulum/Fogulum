@@ -10,7 +10,7 @@ document.body.setAttribute("style","background-color:black")
 
 e = document.createElement("div")
 e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;font-size:30px")
-e.textContent = "Fogulum 1.(3 and a half).(5 and a half)"
+e.textContent = "Fogulum 1.(3 and a half).(5 and a half).2"
 
 document.body.appendChild(e)
 
@@ -661,7 +661,7 @@ fo.text = (s,px,py,align,col,font,rot) => {
     if (rot == undefined) { ff.fillText(s,px,py) } else {
         ff.translate(px,py)
         ff.rotate(rot)
-        ff.fillText("FILLER",0,0)
+        ff.fillText(s,0,0)
     }
 }
 
