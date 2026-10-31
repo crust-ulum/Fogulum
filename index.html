@@ -10,7 +10,7 @@ document.body.setAttribute("style","background-color:black")
 
 e = document.createElement("div")
 e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;font-size:30px")
-e.textContent = "Fogulum 1.(3 and a half).(5 and a half)[square root of .]2"
+e.textContent = "Fogulum 1.(3 1/2).(5 1/2)[sqrt(.)]2[sqrt(.)]2"
 
 document.body.appendChild(e)
 
@@ -395,7 +395,13 @@ function downloadImage() {
 }
 selectedEff = 0
 effs = [{t: "#", bc: "// beforecode", c: "return [127,0,255,255]", ac: "// aftercode", d: false}]
+function ssaveEff() {
+    effs[selectedEff].bc = document.getElementById("beforecode").value||"// beforecode"
+    effs[selectedEff].c = document.getElementById("code").value
+    effs[selectedEff].ac = document.getElementById("aftercode").value||"// aftercode"
+}
 function manageEff(u) {
+    ssaveEff()
     if (u == 1) addEff("#",["","return c",""],false)
     else if (u == 2) subEff()
     else if (u == 3) dupEff()
@@ -406,11 +412,19 @@ function manageEff(u) {
 }
 function addEff(title,code,disabled) {
     if (effs.length == 0) {
-        document.getElementById("beforecode").value = code[0]
-        document.getElementById("code").value = code[1]
-        document.getElementById("aftercode").value = code[2]
+        effs = [{t: title, bc: code[0], c: code[1], ac: code[2], d: disabled}]
+        selEff(0,true)
+    } else {
+        let neffs = []
+        for (let i = 0; i < effs.length; i++) {
+            neffs.push(effs[i])
+            if (i == selectedEff) {
+                neffs.push({t: title, bc: code[0], c: code[1], ac: code[2], d: disabled})
+            }
+        }
+        effs = neffs
+        selEff(selectedEff+1,true)
     }
-    effs.push({t: title, bc: code[0], c: code[1], ac: code[2], d: disabled})
     updEff()
 }
 function subEff() {
@@ -517,9 +531,7 @@ setInterval(()=>{
     }
 },0)
 function saveSession() {
-    effs[selectedEff].bc = document.getElementById("beforecode").value||"// beforecode"
-    effs[selectedEff].c = document.getElementById("code").value
-    effs[selectedEff].ac = document.getElementById("aftercode").value||"// aftercode"
+    ssaveEff()
     localStorage.setItem("images",JSON.stringify(imgsdata))
     localStorage.setItem("effects",JSON.stringify(effs))
     localStorage.setItem("resolution",`[${document.getElementById("width").value},${document.getElementById("height").value}]`)
@@ -555,9 +567,7 @@ function loadSession() {
 }
 loadSession()
 function exportProject() {
-    effs[selectedEff].bc = document.getElementById("beforecode").value
-    effs[selectedEff].c = document.getElementById("code").value
-    effs[selectedEff].ac = document.getElementById("aftercode").value
+    ssaveEff()
     let dwln = prompt("project name:","fogulum_project")
     if (dwln == null) { return } else { dwln += ".txt" }
     let project = {images:JSON.stringify(imgsdata),effects:JSON.stringify(effs),resolution:`[${document.getElementById("width").value},${document.getElementById("height").value}]`}
