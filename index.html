@@ -10,7 +10,7 @@ document.body.setAttribute("style","background-color:black")
 
 e = document.createElement("div")
 e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;font-size:30px")
-e.textContent = "Fogulum 1.(3 and a half).3"
+e.textContent = "Fogulum 1.(3 and a half).4"
 
 document.body.appendChild(e)
 
@@ -231,7 +231,19 @@ fo is a variable that has some functions.
 <font color="#804">fo.</font><font color="#f08">mod(x,y)</font> - the remainder of x/y. (always positive)
 <font color="#804">fo.</font><font color="#f08">hsv2rgb(h,s,v)</font> - converts [H,S,V] into [R,G,B].
 <font color="#804">fo.</font><font color="#f08">rgb2hsv(r,g,b)</font> - converts [R,G,B] into [H,S,V].
-<font color="#804">fo.</font><font color="#f08">text(s,px,py,col,font)</font> - puts text into the canvas. parameters: (string, positionx, positiony, color, font). px and py refer to the bottom left corner. font contains the font size and family.
+
+<font color="#804">fo.</font><font color="#f08">text(s,px,py,align,col,font)</font>
+puts text into the canvas. parameters =>
+s - the string that is rendered.
+px, py - the position of the font.
+align - alignment. must be [a,b]. a is x and b is y.
+if a is 0, leftmost. if a is 1, center. if a is 2, rightmost.
+if b is 0, topmost. if b is 1, center. if b is 2, bottommost. its like:
+[0.0     1.0     2.0] 
+[0.1     1.1     2.1]
+[0.2     1.2     2.2]. defaults to top left.
+col - the color of the font. may be #hexhex, hsv(), rgb(), etc. css colors.
+font - font size and family.
 
 <r style="text-decoration:underline">credits & notes =></r>
 id like to thank deca quitin for the core parts of the engine.
@@ -640,12 +652,13 @@ fo.rgb2hsv = (r,g,b) => {
     let d = cM-Math.min(r_,g_,b_)
     return [(d==0?0:cM==r_?60*(fo.mod((g_-b_)/d,6)):cM==g_?60*((b_-r_)/d+2):cM==b_?60*((r_-g_)/d+4):0),(cM==0?0:d/cM),cM]
 }
-fo.text = (s,px,py,col,font) => {
+fo.text = (s,px,py,align,col,font) => {
     ff.fillStyle = col || "#ffffff"
     ff.font = font || "20px \"Consolas\", monospace"
+    ff.textBaseline = ["top","middle","alphabetic"][(align||[0,0])[1]]
+    ff.textAlign = ["left","center","right"][(align||[0,0])[0]]
     ff.fillText(s,px,py)
 }
-
 
 
 
