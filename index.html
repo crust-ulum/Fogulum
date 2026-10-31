@@ -10,7 +10,7 @@ document.body.setAttribute("style","background-color:black")
 
 e = document.createElement("div")
 e.setAttribute("style","font-family:\"Consolas\",monospace;color:white;font-size:30px")
-e.textContent = "Fogulum 1.(3 and a half).(5 and a half).2"
+e.textContent = "Fogulum 1.(3 and a half).(5 and a half).3"
 
 document.body.appendChild(e)
 
@@ -361,10 +361,12 @@ function render() {
         setStatus(`rendered frame ${V} of ${document.getElementById("gif_frames").value} (${(V/Number(document.getElementById("gif_frames").value)*100).toFixed(2)}) in ${(Date.now()-tt)/1000}s`)
         GIF.addFrame(ff, false); V++
         if (V > Number(document.getElementById("gif_frames").value)) {
+            constructinggif = false; V = 1; autoRender(false)
+            let dwln = prompt("gif name:","fogulum_gif")
+            if (dwln == null) { return } else { gifExportStop() }
             GIF.finish()
-            constructinggif = false; V = 1; autoRendering = false
             vg = GIF
-            GIF.download(prompt("gif name:","fogulum_gif"))
+            GIF.download(dwln)
             document.getElementById("gifexportdo").textContent = "export as gif"
             setStatus("downloaded rendered gif")
         }
@@ -380,8 +382,10 @@ function copyImage() {
     setStatus("copied")
 }
 function downloadImage() {
+    let dwln = prompt("image name:","fogulum_image")
+    if (dwln == null) { return } else { dwln += ".png" }
     let dwl = document.createElement("a")
-    dwl.setAttribute("download",prompt("image name:","fogulum_image")+".png")
+    dwl.setAttribute("download",dwln)
     f.toBlob((blob)=>{
         let url = URL.createObjectURL(blob)
         dwl.setAttribute("href", url)
@@ -499,8 +503,8 @@ function setStatus(u) {
     document.getElementById("status").textContent = u
 }
 autoRendering = false
-function autoRender() {
-    autoRendering = !autoRendering
+function autoRender(x) {
+    if (x != undefined) { autoRendering = x } else { autoRendering = !autoRendering }
     if (autoRendering) {
         document.getElementById("autorender").setAttribute("style","font-family:\"Consolas\",monospace;color:black;background-color:white;border:none;outline:white solid 1px")
     } else {
@@ -554,10 +558,12 @@ function exportProject() {
     effs[selectedEff].bc = document.getElementById("beforecode").value
     effs[selectedEff].c = document.getElementById("code").value
     effs[selectedEff].ac = document.getElementById("aftercode").value
+    let dwln = prompt("project name:","fogulum_project")
+    if (dwln == null) { return } else { dwln += ".txt" }
     let project = {images:JSON.stringify(imgsdata),effects:JSON.stringify(effs),resolution:`[${document.getElementById("width").value},${document.getElementById("height").value}]`}
     project = JSON.stringify(project)
     let dwl = document.createElement("a")
-    dwl.setAttribute("download",prompt("project name:","fogulum_project")+".txt")
+    dwl.setAttribute("download",dwln+".txt")
     dwl.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(project))
     dwl.click()
     setStatus("exported project")
@@ -610,12 +616,12 @@ function gifExportRun() {
     GIF.setDelay(1e3 / Number(document.getElementById("gif_fps").value))
     GIF.setQuality(Number(document.getElementById("gif_quality").value))
     GIF.setRepeat(0)
-    autoRendering = true
+    autoRender(true)
     GIF.start()
 }
 function gifExportStop() {
     GIF.finish()
-    constructinggif = false; V = 1; autoRendering = false
+    constructinggif = false; V = 1; autoRender(false)
     vg = GIF
     document.getElementById("gifexportdo").textContent = "export as gif"
     setStatus("stopped rendering gif"); rcanvas()
